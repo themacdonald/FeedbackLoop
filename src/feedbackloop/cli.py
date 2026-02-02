@@ -28,4 +28,4 @@ def main() -> None:
     with open(model_path, "wb") as f:
         pickle.dump({"preferences": preferences}, f)
 
-    print(f"Demo reward model saved to {model_path}")
+   print(f"Wrote: {model_path}")
