@@ -1,18 +1,21 @@
+import json
 import sys
-from pathlib import Path
 
 from feedbackloop.cli import main
 
 
-def test_demo_creates_artifact(tmp_path, monkeypatch, capsys):
-    # Change working directory to a temporary path
+def test_demo_creates_verifiable_artifact(tmp_path, monkeypatch, capsys):
     monkeypatch.chdir(tmp_path)
-    # Simulate calling the CLI with --demo
     monkeypatch.setattr(sys, "argv", ["feedbackloop", "--demo"])
-    # Run the CLI main function
+
     main()
-    # Capture output
+
+    output = tmp_path / "artifacts" / "work_demo.json"
+    assert output.exists()
+
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    assert payload["verification"]["valid"] is True
+    assert payload["work"]["state"] == "completed"
+
     out, _ = capsys.readouterr()
-# Expect message about saved model
-    # Ensure the artifact file was created
-    assert (tmp_path / "artifacts" / "reward_model.pkl").exists()
+    assert "Wrote:" in out

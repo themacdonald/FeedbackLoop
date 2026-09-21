@@ -1,39 +1,89 @@
 # FeedbackLoop
 
-**Goal:** Develop a full reinforcement learning from human feedback (RLHF) pipeline tailored for recruiting chatbots and scoring models. This system collects human feedback from recruiters, trains a reward model and fine‑tunes a language model using algorithms such as PPO or Direct Preference Optimization (DPO). RLHF aligns AI with human values by training on human feedback rather than hand‑crafted reward functions【165012901649046†L48-L57】, and typically involves stages from data generation to reward modeling and final training【165012901649046†L59-L65】.
+**FeedbackLoop is an experimental typed runtime for representing, executing, verifying, and learning from work.**
 
-## Features
+## North Star
 
-- **Feedback Collection Interface:** A web‑based annotation tool where recruiters compare two responses and record which one is preferred. Data is stored as `(prompt, response_A, response_B, preferred)` pairs.
-- **Reward Model Trainer:** A module that trains a lightweight reward model to assign scalar scores to responses, reflecting recruiter preferences.
-- **Policy Optimization:** Scripts to fine‑tune a base model (e.g. Llama‑2 or open‑source 7B models) using RLHF techniques. Supports PPO with KL‑penalty or DPO for efficiency.
-- **Evaluation Suite:** Tools to compare the fine‑tuned model against the base model using automatic metrics and human‑style tests (win‑rates), plus fairness metrics via BiasGuard to ensure improvements don’t exacerbate bias.
-- **Colab Integration:** Provide Jupyter notebooks for each stage (feedback collection simulation, reward model training, RL optimization) that run on Colab's free GPUs.
+> **Make work a first-class primitive of computing.**
 
-## Quick Start
+The project starts from a simple hypothesis:
 
-1. Clone the repository and install dependencies (Python 3.8, `transformers`, `trl`, `streamlit`):
-   ```bash
-   git clone https://github.com/themacdonald/FeedbackLoop.git
-   cd FeedbackLoop
-   pip install -r requirements.txt
-   ```
-2. Run `feedback_app.py` to launch the annotation interface and collect sample preference data.
-3. Train the reward model by running `python train_reward_model.py`.
-4. Fine‑tune the policy via PPO or DPO using `python train_rl_agent.py --method ppo` or `--method dpo`.
-5. Evaluate the resulting model with `python evaluate_model.py`, including fairness checks with BiasGuard.
+If computing has primitives such as types, functions, processes, transactions, permissions, resources, and events, then work should also have explicit computational primitives.
 
-## Implementation Plan
+FeedbackLoop explores that hypothesis through a small, dependency-light Work Kernel.
 
-Two‑week sprint (~30 hours):
+## v0.2: Work Kernel
 
-- **Week 1:** Build the annotation interface and collect a small preference dataset; implement reward model training using Hugging Face’s libraries.
-- **Week 2:** Implement PPO/DPO training loops, monitor reward and KL metrics, evaluate the fine‑tuned model, and create a high‑level dashboard.
+The first implementation deliberately avoids LLMs, agents, RLHF, dashboards, databases, and domain-specific workflows.
 
-## Contributing
+It currently provides:
 
-Contributions are welcome! Please open issues or submit pull requests to add features, fix bugs, or improve documentation. See `CONTRIBUTING.md` for guidelines.
+- **Intent**: what the work is trying to accomplish.
+- **Capability**: what operation can be performed.
+- **Authority**: which actor may perform that capability.
+- **Evidence**: immutable artifacts supporting execution or claims.
+- **Outcome**: the observed result of execution.
+- **WorkState**: an explicit lifecycle.
+- **WorkEvent**: immutable lifecycle history.
+- **WorkRuntime**: controlled execution and state transitions.
+- **WorkVerifier**: deterministic verification independent of execution.
+
+### Example lifecycle
+
+```text
+PROPOSED
+   ↓
+AUTHORIZED
+   ↓
+RUNNING
+   ↓
+VERIFYING
+   ↓
+COMPLETED
+```
+
+Failure and blocking states are explicit rather than silently swallowed.
+
+## Design principles
+
+1. **Typed over implicit**: important work concepts are explicit objects.
+2. **Authority before action**: execution requires explicit capability authority.
+3. **Evidence before completion**: required evidence must exist before work can complete.
+4. **Verification is independent**: the verifier does not trust the executor.
+5. **Failure is data**: blocked, failed, cancelled, and invalid states are first-class.
+6. **Domain neutrality**: the kernel should not be designed around recruiting, O&M, or any other single domain.
+
+## Running
+
+```bash
+pip install -e ".[dev]"
+pytest -q
+ruff check .
+feedbackloop --demo
+```
+
+The demo produces `artifacts/work_demo.json`.
+
+## Roadmap
+
+The immediate research loop is:
+
+```text
+Build
+  ↓
+Stress
+  ↓
+Find missing primitive
+  ↓
+Revise kernel
+  ↓
+Repeat
+  ↓
+Adapt to real domains
+```
+
+O&M Agency, BiasGuard, AI agents, and RLHF are future validation/adaptation layers, not assumptions baked into the kernel.
 
 ## License
 
-This project is licensed under the MIT License (see `LICENSE` for details).
+MIT
