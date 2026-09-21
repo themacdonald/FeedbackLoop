@@ -1,70 +1,46 @@
-# Technical Specification: FeedbackLoop Work Kernel v0.2
+# FeedbackLoop Work Kernel v0.4
 
-## Architecture
+## Trust model
+
+FeedbackLoop separates four concerns:
 
 ```text
-Intent
-  ↓
-Work
-  ├── Capability
-  ├── Authority
-  ├── Required Evidence
-  └── Lifecycle State
-        ↓
-     Runtime
-        ↓
-      Events
-        ↓
-     Outcome
-        ↓
-   Verification
+Declaration → Runtime Authority → Evidence/Outcome → Independent Verification
 ```
 
-## Trust boundaries
+The runtime is allowed to mutate work state. The verifier is not trusted with execution and independently reconstructs whether the recorded lifecycle is legal.
 
-### Work declaration
-Defines intent and required conditions.
+## Invariants
 
-### Authority
-Determines whether a named actor may execute the declared capability.
+### I1: Capability authority
+`Authority(actor, capabilities)` must grant the Work capability.
 
-### Runtime
-Controls legal state transitions.
+### I2: Actor authorization
+All runtime operations that mutate lifecycle state require the authorized actor.
 
-### Evidence
-Provides artifacts supporting work execution and claims.
+### I3: Transition legality
+A runtime transition must belong to the explicit state-transition graph.
 
-### Outcome
-Records what happened.
+### I4: Terminal immutability
+Completed, failed, and cancelled work cannot receive new evidence.
 
-### Verification
-Independently checks whether the completed work satisfies its basic contract.
+### I5: Evidence completeness
+Completion requires every declared evidence type.
 
-The verifier is intentionally separate from the runtime so successful execution does not automatically imply valid work.
+### I6: Outcome validity
+Completion requires a successful outcome.
 
-## Current limitations
+### I7: Provenance consistency
+The event chain must start from `proposed`, use legal transitions, preserve work identity, and terminate at the current state.
 
-The v0.2 kernel does not yet model:
+## Known next attack surfaces
 
-- complex dependencies
-- resource accounting
-- delegated authority
-- human feedback
-- temporal constraints
-- distributed execution
-- persistent storage
-- policy engines
-- probabilistic or semantic verification
-
-These are intentionally deferred. They should be introduced only when experiments demonstrate that the primitive is missing them.
-
-## Design constraint
-
-No domain-specific abstraction should enter the kernel merely because a single application needs it.
-
-
-## v0.3 Trust-Boundary Hardening
-
-The runtime now treats lifecycle mutation as an authority-bound operation. The authority owner must perform submission, completion, and blocking actions. Evidence cannot be appended after terminal states. The independent verifier also checks that the event history forms a coherent state chain ending at the current work state.
-
-These checks are deliberately deterministic and do not depend on an LLM. They make unauthorized mutation and corrupted provenance visible before FeedbackLoop is extended with persistence, delegation, or human feedback.
+- dependency graphs and cycle detection
+- delegated authority and least privilege
+- resource budgets and exhaustion
+- idempotency and replay
+- concurrency/race conditions
+- durable persistence and crash recovery
+- cryptographic event integrity
+- policy versioning
+- semantic verification

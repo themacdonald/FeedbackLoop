@@ -4,56 +4,34 @@
 
 ## North Star
 
-> **Make work a first-class primitive of computing.**
+> Make work a first-class primitive of computing.
 
-The project starts from a simple hypothesis:
+v0.4 focuses on **trust-boundary hardening**. The kernel now treats authority, lifecycle transitions, evidence mutation, and event provenance as explicit invariants.
 
-If computing has primitives such as types, functions, processes, transactions, permissions, resources, and events, then work should also have explicit computational primitives.
+### Kernel primitives
 
-FeedbackLoop explores that hypothesis through a small, dependency-light Work Kernel.
+- Intent
+- Capability
+- Authority
+- Evidence
+- Outcome
+- WorkState
+- WorkEvent
+- WorkRuntime
+- WorkVerifier
 
-## v0.2: Work Kernel
+### Security invariants
 
-The first implementation deliberately avoids LLMs, agents, RLHF, dashboards, databases, and domain-specific workflows.
+1. Every runtime mutation requires the work authority.
+2. A declared capability must be granted by its authority.
+3. Terminal work cannot be mutated with new evidence.
+4. Only legal lifecycle transitions can be emitted by the runtime.
+5. Verification independently checks the event chain and final state.
+6. Corrupted provenance is surfaced as verification failure.
 
-It currently provides:
+The project intentionally remains free of LLMs, agents, databases, and domain-specific policy until the kernel survives adversarial testing.
 
-- **Intent**: what the work is trying to accomplish.
-- **Capability**: what operation can be performed.
-- **Authority**: which actor may perform that capability.
-- **Evidence**: immutable artifacts supporting execution or claims.
-- **Outcome**: the observed result of execution.
-- **WorkState**: an explicit lifecycle.
-- **WorkEvent**: immutable lifecycle history.
-- **WorkRuntime**: controlled execution and state transitions.
-- **WorkVerifier**: deterministic verification independent of execution.
-
-### Example lifecycle
-
-```text
-PROPOSED
-   ↓
-AUTHORIZED
-   ↓
-RUNNING
-   ↓
-VERIFYING
-   ↓
-COMPLETED
-```
-
-Failure and blocking states are explicit rather than silently swallowed.
-
-## Design principles
-
-1. **Typed over implicit**: important work concepts are explicit objects.
-2. **Authority before action**: execution requires explicit capability authority.
-3. **Evidence before completion**: required evidence must exist before work can complete.
-4. **Verification is independent**: the verifier does not trust the executor.
-5. **Failure is data**: blocked, failed, cancelled, and invalid states are first-class.
-6. **Domain neutrality**: the kernel should not be designed around recruiting, O&M, or any other single domain.
-
-## Running
+## Run
 
 ```bash
 pip install -e ".[dev]"
@@ -61,32 +39,3 @@ pytest -q
 ruff check .
 feedbackloop --demo
 ```
-
-The demo produces `artifacts/work_demo.json`.
-
-## Roadmap
-
-The immediate research loop is:
-
-```text
-Build
-  ↓
-Stress
-  ↓
-Find missing primitive
-  ↓
-Revise kernel
-  ↓
-Repeat
-  ↓
-Adapt to real domains
-```
-
-O&M Agency, BiasGuard, AI agents, and RLHF are future validation/adaptation layers, not assumptions baked into the kernel.
-
-## License
-
-MIT
-
-
-**v0.3.0:** trust-boundary hardening, terminal-state evidence protection, and event-chain verification.

@@ -1,18 +1,14 @@
 from dataclasses import dataclass
 from typing import Any
 
-
 @dataclass(frozen=True)
 class Outcome:
-    """The observed result of executing work."""
-
     status: str
     values: dict[str, Any]
 
     def __post_init__(self) -> None:
-        allowed = {"success", "failure", "partial"}
-        if self.status not in allowed:
-            raise ValueError(f"Outcome status must be one of {sorted(allowed)}.")
+        if self.status not in {"success", "failure", "partial"}:
+            raise ValueError("Outcome status must be one of ['failure', 'partial', 'success'].")
 
     @property
     def successful(self) -> bool:

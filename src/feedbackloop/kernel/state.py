@@ -1,6 +1,5 @@
 from enum import StrEnum
 
-
 class WorkState(StrEnum):
     PROPOSED = "proposed"
     AUTHORIZED = "authorized"

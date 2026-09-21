@@ -1,11 +1,8 @@
 from dataclasses import dataclass
 from typing import Any
 
-
 @dataclass(frozen=True)
 class Evidence:
-    """An immutable artifact supporting a work claim or outcome."""
-
     evidence_id: str
     evidence_type: str
     source: str

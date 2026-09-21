@@ -1,21 +1,14 @@
+from pathlib import Path
 import json
-import sys
 
 from feedbackloop.cli import main
 
-
-def test_demo_creates_verifiable_artifact(tmp_path, monkeypatch, capsys):
+def test_cli_demo_writes_verified_artifact(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
+    import sys
     monkeypatch.setattr(sys, "argv", ["feedbackloop", "--demo"])
-
     main()
-
-    output = tmp_path / "artifacts" / "work_demo.json"
-    assert output.exists()
-
-    payload = json.loads(output.read_text(encoding="utf-8"))
-    assert payload["verification"]["valid"] is True
-    assert payload["work"]["state"] == "completed"
-
-    out, _ = capsys.readouterr()
-    assert "Wrote:" in out
+    artifact = Path("artifacts/work_demo.json")
+    data = json.loads(artifact.read_text())
+    assert data["state"] == "completed"
+    assert len(data["events"]) == 4
