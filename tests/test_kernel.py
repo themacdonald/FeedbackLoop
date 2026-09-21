@@ -113,3 +113,56 @@ def test_event_history_is_append_only_from_the_work_api():
     assert len(work.events) == 2
     assert work.events[0].from_state == "proposed"
     assert work.events[1].to_state == "running"
+
+
+def test_untrusted_actor_cannot_submit_outcome():
+    work = make_work()
+    runtime = authorize_and_start(work)
+    with pytest.raises(PermissionError):
+        runtime.submit_for_verification(work, "intruder", Outcome("success", {}))
+
+
+def test_untrusted_actor_cannot_complete_work():
+    work = make_work()
+    runtime = authorize_and_start(work)
+    work.add_evidence(Evidence("e1", "source", "test", {"rows": 10}))
+    runtime.submit_for_verification(work, "worker-1", Outcome("success", {"transformed": True}))
+    with pytest.raises(PermissionError):
+        runtime.complete(work, "intruder")
+
+
+def test_untrusted_actor_cannot_block_work():
+    work = make_work()
+    runtime = authorize_and_start(work)
+    with pytest.raises(PermissionError):
+        runtime.block(work, "intruder", "fake block")
+
+
+def test_terminal_work_rejects_new_evidence():
+    work = make_work()
+    runtime = authorize_and_start(work)
+    work.add_evidence(Evidence("e1", "source", "test", {"rows": 10}))
+    runtime.submit_for_verification(work, "worker-1", Outcome("success", {"transformed": True}))
+    runtime.complete(work, "worker-1")
+    with pytest.raises(ValueError, match="terminal"):
+        work.add_evidence(Evidence("e2", "source", "test", {"rows": 20}))
+
+
+def test_verifier_detects_broken_event_chain():
+    work = make_work()
+    runtime = authorize_and_start(work)
+    work.add_evidence(Evidence("e1", "source", "test", {"rows": 10}))
+    runtime.submit_for_verification(work, "worker-1", Outcome("success", {"transformed": True}))
+    runtime.complete(work, "worker-1")
+    work.events[1] = work.events[1].__class__(
+        event_type=work.events[1].event_type,
+        work_id=work.work_id,
+        actor_id=work.events[1].actor_id,
+        from_state="proposed",
+        to_state=work.events[1].to_state,
+        occurred_at=work.events[1].occurred_at,
+        details=work.events[1].details,
+    )
+    result = WorkVerifier().verify(work)
+    assert result.valid is False
+    assert "event_history_invalid:state_chain" in result.reasons

@@ -36,4 +36,21 @@ class WorkVerifier:
         if work.state.value != "completed":
             reasons.append(f"work_not_completed:{work.state.value}")
 
+        if work.events:
+            if work.events[0].from_state != "proposed":
+                reasons.append("event_history_invalid:initial_state")
+            previous = work.events[0].from_state
+            for event in work.events:
+                if event.work_id != work.work_id:
+                    reasons.append("event_history_invalid:work_id")
+                    break
+                if event.from_state != previous:
+                    reasons.append("event_history_invalid:state_chain")
+                    break
+                previous = event.to_state
+            if previous != work.state.value:
+                reasons.append("event_history_invalid:terminal_state")
+        elif work.state.value != "proposed":
+            reasons.append("event_history_missing")
+
         return VerificationResult(valid=not reasons, reasons=tuple(reasons))

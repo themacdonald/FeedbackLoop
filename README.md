@@ -87,3 +87,6 @@ O&M Agency, BiasGuard, AI agents, and RLHF are future validation/adaptation laye
 ## License
 
 MIT
+
+
+**v0.3.0:** trust-boundary hardening, terminal-state evidence protection, and event-chain verification.

@@ -36,11 +36,13 @@ class WorkRuntime:
 
     def submit_for_verification(self, work: Work, actor_id: str, outcome: Outcome) -> None:
         self._require_transition(work, WorkState.VERIFYING)
+        self._require_owner(work, actor_id)
         work.outcome = outcome
         self._transition(work, WorkState.VERIFYING, actor_id, "submitted_for_verification")
 
     def complete(self, work: Work, actor_id: str) -> None:
         self._require_transition(work, WorkState.COMPLETED)
+        self._require_owner(work, actor_id)
         if not work.has_required_evidence():
             missing = sorted(work.required_evidence - work.evidence_types())
             raise ValueError(f"Cannot complete work. Missing evidence: {missing}")
@@ -50,9 +52,14 @@ class WorkRuntime:
 
     def block(self, work: Work, actor_id: str, reason: str) -> None:
         self._require_transition(work, WorkState.BLOCKED)
+        self._require_owner(work, actor_id)
         if not reason.strip():
             raise ValueError("A block reason is required.")
         self._transition(work, WorkState.BLOCKED, actor_id, "blocked", {"reason": reason})
+
+    def _require_owner(self, work: Work, actor_id: str) -> None:
+        if work.authority.actor_id != actor_id:
+            raise PermissionError(f"Actor '{actor_id}' does not own this work authority.")
 
     def _require_transition(self, work: Work, target: WorkState) -> None:
         if target not in self._TRANSITIONS[work.state]:

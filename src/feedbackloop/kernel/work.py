@@ -35,6 +35,8 @@ class Work:
         return self.required_evidence.issubset(self.evidence_types())
 
     def add_evidence(self, evidence: Evidence) -> None:
+        if self.state in {WorkState.COMPLETED, WorkState.FAILED, WorkState.CANCELLED}:
+            raise ValueError(f"Cannot add evidence after work is terminal: {self.state.value}")
         if any(item.evidence_id == evidence.evidence_id for item in self.evidence):
             raise ValueError(f"Duplicate evidence id: {evidence.evidence_id}")
         self.evidence.append(evidence)
